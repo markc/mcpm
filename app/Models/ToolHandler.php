@@ -88,10 +88,10 @@ class ToolHandler extends Model
     public function getFullClassNameAttribute(): string
     {
         if ($this->handler_type === 'bash') {
-            return 'bash:' . $this->name; // Special identifier for bash handlers
+            return 'bash:'.$this->name; // Special identifier for bash handlers
         }
-        
-        return $this->namespace . '\\' . $this->class_name;
+
+        return $this->namespace.'\\'.$this->class_name;
     }
 
     /**
@@ -101,17 +101,18 @@ class ToolHandler extends Model
     {
         if ($this->handler_type === 'bash') {
             // For bash handlers, check if script content exists and is not empty
-            return !empty($this->script_content);
+            return ! empty($this->script_content);
         }
-        
+
         // For PHP handlers, check class exists and implements interface
         $fullClassName = $this->full_class_name;
-        
-        if (!class_exists($fullClassName)) {
+
+        if (! class_exists($fullClassName)) {
             return false;
         }
 
         $interfaces = class_implements($fullClassName);
+
         return in_array('App\\Contracts\\ToolInterface', $interfaces ?: []);
     }
 
@@ -120,29 +121,63 @@ class ToolHandler extends Model
      */
     public function getInstance(): object
     {
-        if (!$this->isValidHandler()) {
-            throw new \InvalidArgumentException("Handler is not valid");
+        if (! $this->isValidHandler()) {
+            throw new \InvalidArgumentException('Handler is not valid');
         }
 
         if ($this->handler_type === 'bash') {
             // For bash handlers, we can't create an instance without a tool
             // This method is mainly for validation, so we'll return a mock
-            return new class($this) implements \App\Contracts\BashToolInterface {
+            return new class($this) implements \App\Contracts\BashToolInterface
+            {
                 private $handler;
-                public function __construct($handler) { $this->handler = $handler; }
-                public function getName(): string { return $this->handler->name; }
-                public function getDescription(): string { return $this->handler->description; }
-                public function execute(array $input): array { throw new \BadMethodCallException('Use Tool->getInstance() for execution'); }
-                public function validateInput(array $input): bool { return true; }
-                public function getScriptContent(): string { return $this->handler->script_content ?? ''; }
-                public function getEnvironmentVariables(): array { return $this->handler->environment_variables ?? []; }
-                public function getTimeoutSeconds(): int { return $this->handler->timeout_seconds ?? 30; }
+
+                public function __construct($handler)
+                {
+                    $this->handler = $handler;
+                }
+
+                public function getName(): string
+                {
+                    return $this->handler->name;
+                }
+
+                public function getDescription(): string
+                {
+                    return $this->handler->description;
+                }
+
+                public function execute(array $input): array
+                {
+                    throw new \BadMethodCallException('Use Tool->getInstance() for execution');
+                }
+
+                public function validateInput(array $input): bool
+                {
+                    return true;
+                }
+
+                public function getScriptContent(): string
+                {
+                    return $this->handler->script_content ?? '';
+                }
+
+                public function getEnvironmentVariables(): array
+                {
+                    return $this->handler->environment_variables ?? [];
+                }
+
+                public function getTimeoutSeconds(): int
+                {
+                    return $this->handler->timeout_seconds ?? 30;
+                }
             };
         }
 
         // For PHP handlers, instantiate the class
         $fullClassName = $this->full_class_name;
-        return new $fullClassName();
+
+        return new $fullClassName;
     }
 
     /**

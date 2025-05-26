@@ -55,6 +55,7 @@ class ToolResource extends Resource
                             ->required()
                             ->options(function () {
                                 $handlerDiscovery = app(\App\Services\HandlerDiscoveryService::class);
+
                                 return $handlerDiscovery->getHandlerOptions();
                             })
                             ->searchable()
@@ -64,7 +65,7 @@ class ToolResource extends Resource
                                 if ($state) {
                                     $handlerDiscovery = app(\App\Services\HandlerDiscoveryService::class);
                                     $handler = $handlerDiscovery->getHandler($state);
-                                    
+
                                     if ($handler && $handler->input_schema_template) {
                                         $set('input_schema', $handler->input_schema_template);
                                     }
@@ -106,12 +107,12 @@ class ToolResource extends Resource
                                 if (empty($state)) {
                                     return null;
                                 }
-                                
+
                                 $decoded = json_decode($state, true);
                                 if (json_last_error() !== JSON_ERROR_NONE) {
-                                    throw new \Exception('Invalid JSON schema: ' . json_last_error_msg());
+                                    throw new \Exception('Invalid JSON schema: '.json_last_error_msg());
                                 }
-                                
+
                                 return $decoded;
                             })
                             ->columnSpanFull(),
@@ -197,6 +198,7 @@ class ToolResource extends Resource
                     ->label('Handler Type')
                     ->options(function () {
                         $handlerDiscovery = app(\App\Services\HandlerDiscoveryService::class);
+
                         return $handlerDiscovery->getHandlerOptions();
                     }),
             ])
@@ -211,15 +213,15 @@ class ToolResource extends Resource
                     ->action(function (Tool $record, array $data) {
                         try {
                             // Check if raw JSON was provided
-                            if (!empty($data['_raw_json'])) {
+                            if (! empty($data['_raw_json'])) {
                                 $input = json_decode($data['_raw_json'], true);
                                 if (json_last_error() !== JSON_ERROR_NONE) {
-                                    throw new \Exception('Invalid JSON format: ' . json_last_error_msg());
+                                    throw new \Exception('Invalid JSON format: '.json_last_error_msg());
                                 }
                             } else {
                                 // Remove form metadata and build input from form fields
-                                $input = array_filter($data, function($key) {
-                                    return !in_array($key, ['_test_mode', '_form_id', '_raw_json']);
+                                $input = array_filter($data, function ($key) {
+                                    return ! in_array($key, ['_test_mode', '_form_id', '_raw_json']);
                                 }, ARRAY_FILTER_USE_KEY);
                             }
 
@@ -355,10 +357,10 @@ class ToolResource extends Resource
     protected static function buildTestForm(Tool $record): array
     {
         $exampleData = self::generateExampleData($record->input_schema);
-        
+
         $fields = [
-            Forms\Components\Section::make('Test Tool: ' . $record->display_name)
-                ->description($record->description . ($exampleData ? "\n\n**Example data available** - check the Advanced section to auto-fill sample values." : ''))
+            Forms\Components\Section::make('Test Tool: '.$record->display_name)
+                ->description($record->description.($exampleData ? "\n\n**Example data available** - check the Advanced section to auto-fill sample values." : ''))
                 ->schema(self::buildFormFieldsFromSchema($record->input_schema))
                 ->collapsible(false),
         ];
@@ -385,7 +387,7 @@ class ToolResource extends Resource
         $fields = [];
 
         // Handle standard JSON schema format
-        if (!isset($schema['properties']) || !is_array($schema['properties'])) {
+        if (! isset($schema['properties']) || ! is_array($schema['properties'])) {
             return [
                 Forms\Components\Placeholder::make('no_schema')
                     ->label('No Parameters')
@@ -394,7 +396,7 @@ class ToolResource extends Resource
         }
 
         $required = $schema['required'] ?? [];
-        
+
         foreach ($schema['properties'] as $name => $property) {
             $type = $property['type'] ?? 'string';
             $description = $property['description'] ?? '';
@@ -413,14 +415,14 @@ class ToolResource extends Resource
                     ->numeric()
                     ->helperText($description)
                     ->default($default)
-                    ->placeholder($enum ? 'e.g., ' . implode(', ', array_slice($enum, 0, 3)) : 'Enter a number'),
+                    ->placeholder($enum ? 'e.g., '.implode(', ', array_slice($enum, 0, 3)) : 'Enter a number'),
 
                 'array' => Forms\Components\TagsInput::make($name)
                     ->label(ucwords(str_replace('_', ' ', $name)))
-                    ->helperText($description . ($default ? ' (Default: ' . json_encode($default) . ')' : ''))
+                    ->helperText($description.($default ? ' (Default: '.json_encode($default).')' : ''))
                     ->placeholder('Enter values and press Enter'),
 
-                default => $enum 
+                default => $enum
                     ? Forms\Components\Select::make($name)
                         ->label(ucwords(str_replace('_', ' ', $name)))
                         ->options(array_combine($enum, $enum))
@@ -431,7 +433,7 @@ class ToolResource extends Resource
                         ->label(ucwords(str_replace('_', ' ', $name)))
                         ->helperText($description)
                         ->default($default)
-                        ->placeholder($enum ? 'e.g., ' . implode(', ', array_slice($enum, 0, 3)) : 'Enter text'),
+                        ->placeholder($enum ? 'e.g., '.implode(', ', array_slice($enum, 0, 3)) : 'Enter text'),
             };
 
             if ($isRequired) {
@@ -452,7 +454,7 @@ class ToolResource extends Resource
 
     protected static function generateExampleData(array $schema): ?array
     {
-        if (!isset($schema['properties']) || !is_array($schema['properties'])) {
+        if (! isset($schema['properties']) || ! is_array($schema['properties'])) {
             return null;
         }
 
@@ -464,6 +466,7 @@ class ToolResource extends Resource
 
             if ($default !== null) {
                 $exampleData[$name] = $default;
+
                 continue;
             }
 
