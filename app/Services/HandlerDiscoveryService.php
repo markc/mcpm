@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class HandlerDiscoveryService
 {
     private const CACHE_KEY = 'tool_handlers_active';
+
     private const CACHE_TTL = 3600; // 1 hour
 
     /**
@@ -49,15 +50,16 @@ class HandlerDiscoveryService
     public function getHandlerInstance(string $fullClassName): ?object
     {
         $handler = $this->getHandler($fullClassName);
-        
-        if (!$handler) {
+
+        if (! $handler) {
             return null;
         }
 
         try {
             return $handler->getInstance();
         } catch (\Exception $e) {
-            Log::error("Failed to instantiate handler {$fullClassName}: " . $e->getMessage());
+            Log::error("Failed to instantiate handler {$fullClassName}: ".$e->getMessage());
+
             return null;
         }
     }
@@ -68,7 +70,7 @@ class HandlerDiscoveryService
     public function isValidHandler(string $fullClassName): bool
     {
         $handler = $this->getHandler($fullClassName);
-        
+
         return $handler && $handler->isValidHandler();
     }
 
@@ -86,6 +88,7 @@ class HandlerDiscoveryService
     public function refreshCache(): Collection
     {
         $this->clearCache();
+
         return $this->getActiveHandlers();
     }
 
@@ -112,19 +115,19 @@ class HandlerDiscoveryService
                         'operation' => [
                             'type' => 'string',
                             'enum' => ['add', 'subtract', 'multiply', 'divide'],
-                            'description' => 'The arithmetic operation to perform'
+                            'description' => 'The arithmetic operation to perform',
                         ],
                         'a' => [
                             'type' => 'number',
-                            'description' => 'First operand'
+                            'description' => 'First operand',
                         ],
                         'b' => [
                             'type' => 'number',
-                            'description' => 'Second operand'
-                        ]
+                            'description' => 'Second operand',
+                        ],
                     ],
-                    'required' => ['operation', 'a', 'b']
-                ]
+                    'required' => ['operation', 'a', 'b'],
+                ],
             ],
             [
                 'name' => 'datetime',
@@ -143,15 +146,15 @@ class HandlerDiscoveryService
                         'timezone' => [
                             'type' => 'string',
                             'description' => 'IANA timezone identifier (defaults to UTC)',
-                            'default' => 'UTC'
+                            'default' => 'UTC',
                         ],
                         'format' => [
                             'type' => 'string',
                             'description' => 'PHP date format string',
-                            'default' => 'Y-m-d H:i:s'
-                        ]
-                    ]
-                ]
+                            'default' => 'Y-m-d H:i:s',
+                        ],
+                    ],
+                ],
             ],
             [
                 'name' => 'echo',
@@ -169,17 +172,17 @@ class HandlerDiscoveryService
                     'properties' => [
                         'message' => [
                             'type' => 'string',
-                            'description' => 'Message to echo back'
+                            'description' => 'Message to echo back',
                         ],
                         'delay' => [
                             'type' => 'number',
                             'description' => 'Optional delay in seconds (max 5)',
                             'minimum' => 0,
-                            'maximum' => 5
-                        ]
+                            'maximum' => 5,
+                        ],
                     ],
-                    'required' => ['message']
-                ]
+                    'required' => ['message'],
+                ],
             ],
             // Example bash handler
             [
@@ -214,24 +217,24 @@ echo "}"',
                 'input_schema_template' => [
                     'type' => 'object',
                     'properties' => [],
-                    'required' => []
-                ]
-            ]
+                    'required' => [],
+                ],
+            ],
         ];
 
         $registered = [];
-        
+
         foreach ($builtInHandlers as $handlerData) {
             $existing = ToolHandler::where('name', $handlerData['name'])->first();
-            
-            if (!$existing) {
+
+            if (! $existing) {
                 $handler = ToolHandler::create($handlerData);
                 $registered[] = $handler;
                 Log::info("Registered built-in handler: {$handler->display_name}");
             }
         }
 
-        if (!empty($registered)) {
+        if (! empty($registered)) {
             $this->clearCache();
         }
 
@@ -244,7 +247,7 @@ echo "}"',
     public function getHandlerStats(): array
     {
         $handlers = ToolHandler::all();
-        
+
         return [
             'total' => $handlers->count(),
             'active' => $handlers->where('is_active', true)->count(),
@@ -262,15 +265,15 @@ echo "}"',
     public function validateAllHandlers(): array
     {
         $results = [];
-        
+
         foreach (ToolHandler::all() as $handler) {
             $results[$handler->name] = [
                 'handler' => $handler,
                 'valid' => $handler->isValidHandler(),
-                'error' => null
+                'error' => null,
             ];
-            
-            if (!$results[$handler->name]['valid']) {
+
+            if (! $results[$handler->name]['valid']) {
                 try {
                     $handler->getInstance();
                 } catch (\Exception $e) {
@@ -278,7 +281,7 @@ echo "}"',
                 }
             }
         }
-        
+
         return $results;
     }
 }

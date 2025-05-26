@@ -16,8 +16,8 @@ interface BashToolInterface
 
     /**
      * Execute the bash script with the given input
-     * 
-     * @param array $input The input parameters for the tool
+     *
+     * @param  array  $input  The input parameters for the tool
      * @return array The output result from the bash script
      */
     public function execute(array $input): array;

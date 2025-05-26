@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ToolHandlerSeeder extends Seeder
@@ -13,20 +12,20 @@ class ToolHandlerSeeder extends Seeder
     public function run(): void
     {
         $handlerDiscovery = app(\App\Services\HandlerDiscoveryService::class);
-        
+
         $this->command->info('Discovering and registering built-in tool handlers...');
-        
+
         $registered = $handlerDiscovery->discoverBuiltInHandlers();
-        
+
         if (empty($registered)) {
             $this->command->info('All built-in handlers are already registered.');
         } else {
-            $this->command->info('Registered ' . count($registered) . ' built-in handlers:');
+            $this->command->info('Registered '.count($registered).' built-in handlers:');
             foreach ($registered as $handler) {
                 $this->command->line("  - {$handler->display_name} ({$handler->full_class_name})");
             }
         }
-        
+
         // Display stats
         $stats = $handlerDiscovery->getHandlerStats();
         $this->command->info("\nHandler Statistics:");

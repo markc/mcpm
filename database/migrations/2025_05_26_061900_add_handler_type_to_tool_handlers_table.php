@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('script_content')->nullable()->after('file_path'); // For storing bash scripts
             $table->json('environment_variables')->nullable()->after('script_content'); // Env vars for bash
             $table->integer('timeout_seconds')->default(30)->after('environment_variables'); // Execution timeout
-            
+
             // Update indexes
             $table->index(['handler_type', 'is_active']);
         });

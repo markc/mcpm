@@ -12,7 +12,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Storage;
 
 class ToolHandlerResource extends Resource
 {
@@ -48,8 +47,7 @@ class ToolHandlerResource extends Resource
                             ->rules(['regex:/^[a-z_]+$/'])
                             ->helperText('Handler identifier (lowercase, underscores only)')
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn ($state, Forms\Set $set) => 
-                                $set('display_name', ucwords(str_replace('_', ' ', $state)) . ' Tool')
+                            ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('display_name', ucwords(str_replace('_', ' ', $state)).' Tool')
                             ),
 
                         Forms\Components\TextInput::make('display_name')
@@ -81,8 +79,8 @@ class ToolHandlerResource extends Resource
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 if ($get('handler_type') === 'php') {
                                     $namespace = $get('namespace') ?? 'App\\Tools';
-                                    $fileName = $state . '.php';
-                                    $set('file_path', 'app/Tools/' . $fileName);
+                                    $fileName = $state.'.php';
+                                    $set('file_path', 'app/Tools/'.$fileName);
                                 }
                             }),
 
@@ -176,12 +174,12 @@ class ToolHandlerResource extends Resource
                                 if (empty($state)) {
                                     return null;
                                 }
-                                
+
                                 $decoded = json_decode($state, true);
                                 if (json_last_error() !== JSON_ERROR_NONE) {
-                                    throw new \Exception('Invalid JSON schema: ' . json_last_error_msg());
+                                    throw new \Exception('Invalid JSON schema: '.json_last_error_msg());
                                 }
-                                
+
                                 return $decoded;
                             })
                             ->columnSpanFull(),
@@ -203,7 +201,7 @@ class ToolHandlerResource extends Resource
                                 if ($state) {
                                     $className = $get('class_name');
                                     if ($className) {
-                                        $set('file_path', 'storage/app/tool-handlers/' . $state);
+                                        $set('file_path', 'storage/app/tool-handlers/'.$state);
                                     }
                                 }
                             }),
@@ -376,7 +374,7 @@ echo "{\"result\": \"$result\", \"status\": \"success\"}"')
                     ->action(function (ToolHandler $record) {
                         try {
                             $isValid = $record->isValidHandler();
-                            
+
                             if ($isValid) {
                                 Notification::make()
                                     ->title('✅ Handler Validation Successful')
@@ -395,7 +393,7 @@ echo "{\"result\": \"$result\", \"status\": \"success\"}"')
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->title('❌ Handler Test Failed')
-                                ->body('Error: ' . $e->getMessage())
+                                ->body('Error: '.$e->getMessage())
                                 ->danger()
                                 ->persistent()
                                 ->send();
@@ -412,17 +410,17 @@ echo "{\"result\": \"$result\", \"status\": \"success\"}"')
                                 ->body('Built-in handlers cannot be deleted.')
                                 ->danger()
                                 ->send();
-                            
+
                             return false;
                         }
-                        
+
                         if ($record->usage_count > 0) {
                             Notification::make()
                                 ->title('Cannot Delete Handler')
                                 ->body("This handler is used by {$record->usage_count} tool(s). Remove the tools first.")
                                 ->danger()
                                 ->send();
-                            
+
                             return false;
                         }
                     }),
@@ -435,24 +433,24 @@ echo "{\"result\": \"$result\", \"status\": \"success\"}"')
                             $inUseCount = $records->filter(function ($record) {
                                 return $record->usage_count > 0;
                             })->count();
-                            
+
                             if ($builtInCount > 0) {
                                 Notification::make()
                                     ->title('Cannot Delete Built-in Handlers')
                                     ->body("{$builtInCount} built-in handlers cannot be deleted.")
                                     ->danger()
                                     ->send();
-                                
+
                                 return false;
                             }
-                            
+
                             if ($inUseCount > 0) {
                                 Notification::make()
                                     ->title('Cannot Delete Handlers')
                                     ->body("{$inUseCount} handlers are in use by tools.")
                                     ->danger()
                                     ->send();
-                                
+
                                 return false;
                             }
                         }),
@@ -522,14 +520,13 @@ echo "{\"result\": \"$result\", \"status\": \"success\"}"')
                             ->label('')
                             ->columnSpanFull(),
                     ])
-                    ->visible(fn (ToolHandler $record): bool => !empty($record->dependencies)),
+                    ->visible(fn (ToolHandler $record): bool => ! empty($record->dependencies)),
 
                 Infolists\Components\Section::make('Input Schema Template')
                     ->schema([
                         Infolists\Components\TextEntry::make('input_schema_template')
                             ->label('')
-                            ->formatStateUsing(fn (ToolHandler $record): string => 
-                                $record->input_schema_template 
+                            ->formatStateUsing(fn (ToolHandler $record): string => $record->input_schema_template
                                     ? json_encode($record->input_schema_template, JSON_PRETTY_PRINT)
                                     : 'No template defined'
                             )
